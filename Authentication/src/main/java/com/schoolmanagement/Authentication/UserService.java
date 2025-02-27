@@ -3,23 +3,23 @@ package com.schoolmanagement.Authentication;
 import com.schoolmanagement.Authentication.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
-
+    private final JwtUtil jwtUtil;  // JwtUtil should be properly injected here
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.jwtUtil = new JwtUtil();
+        this.jwtUtil = jwtUtil;  // Correctly injected JwtUtil here
     }
 
     // Sign-up method (only for TEACHER or ADMIN roles)
@@ -57,8 +57,9 @@ public class UserService {
         if (!passwordEncoder.matches(password, userEntity.getPassword())) {
             throw new IllegalArgumentException("Invalid password");
         }
+        List<String> roles = List.of(userEntity.getRole().name());
 
         // Generate JWT token
-        return jwtUtil.generateToken(username);
+        return jwtUtil.generateToken(username, roles);
     }
 }

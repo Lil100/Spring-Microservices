@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: onboarding
+    name: configuration
 
   datasource:
     url: jdbc:mariadb://localhost:3306/schoolmanagement_db

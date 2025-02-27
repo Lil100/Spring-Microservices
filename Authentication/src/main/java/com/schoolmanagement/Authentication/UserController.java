@@ -2,6 +2,7 @@ package com.schoolmanagement.Authentication;
 
 import com.schoolmanagement.Authentication.security.JwtUtil;
 import com.schoolmanagement.Authentication.security.UserRegistrationDTO;
+import com.schoolmanagement.Authentication.security.UserResponseDTO;
 import com.schoolmanagement.Authentication.security.UserSigninDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -13,7 +14,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -25,6 +28,8 @@ public class UserController {
     private JwtUtil jwtUtil;
     @Autowired
     private AuthenticationManager authenticationManager;
+    @Autowired
+    private UserRepository userRepository;
 
     // Endpoint for Sign-Up (only for Teacher or Admin)
     @PostMapping("/signup")
@@ -69,8 +74,17 @@ public class UserController {
                     new UsernamePasswordAuthenticationToken(username, password)
             );
 
+            UserEntity userEntity = userRepository.findByUsername(username);
+
+            // Check if user exists
+            if (userEntity == null) {
+                throw new UsernameNotFoundException("User not found with username: " + username);
+            }
+
+            String role = userEntity.getRole().name();
+
             // If authentication is successful, generate JWT token
-            String token = jwtUtil.generateToken(username);
+            String token = jwtUtil.generateToken(username, List.of(role));
 
             // Prepare response data
             Map<String, String> response = new HashMap<>();
@@ -85,6 +99,21 @@ public class UserController {
             return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
         }
     }
+
+    @GetMapping("/validate")
+    public ResponseEntity<?> validateToken(@RequestHeader("Authorization") String token) {
+        // Remove "Bearer " prefix from the token
+        String jwtToken = token.substring(7);
+
+        if (jwtUtil.isTokenValid(jwtToken)) {
+            String username = jwtUtil.extractUsername(jwtToken);
+            // You can also return other user details like roles, etc.
+            return ResponseEntity.ok(new UserResponseDTO(username));  // Create a DTO or response class for user details
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token");
+        }
+    }
+
 
 }
 

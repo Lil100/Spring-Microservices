@@ -1,5 +1,6 @@
 package com.schoolmanagement.studentservice.exams;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.schoolmanagement.studentservice.student.StudentEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -19,6 +20,7 @@ public class ExamsEntity {
     private String term;
 
     @ManyToOne
+    @JsonBackReference
     @JoinColumn(name = "student_id")
     private StudentEntity student;
 
