@@ -11,8 +11,9 @@ public class UserResponseDTO {
     private String username;
     private List<String> roles;
 
-    public UserResponseDTO(String username) {
+    public UserResponseDTO(String username,List<String> roles) {
         this.username = username;
+        this.roles = roles;
 
     }
 

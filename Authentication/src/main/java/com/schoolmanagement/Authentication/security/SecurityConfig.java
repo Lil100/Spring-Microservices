@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -14,6 +15,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.config.http.SessionCreationPolicy;
 
 @Configuration
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
@@ -30,10 +32,17 @@ public class SecurityConfig {
                 .cors(cors -> cors.disable())  // Disable CORS if not needed
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests()
+                .requestMatchers("/swagger-ui/**").permitAll()
+                .requestMatchers("/v3/api-docs/**").permitAll()
+                .requestMatchers("/swagger-ui.html").permitAll()
+                .requestMatchers("http://localhost:8082/swagger-ui/index.html#").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/api/auth/signup").permitAll()
                 .requestMatchers("/api/auth/signin").permitAll()
                 .requestMatchers("/api/auth/signup").hasAnyRole("ADMIN", "TEACHER")  // Only admin or teacher can sign up
+                .requestMatchers("/api/auth/admin/**").hasRole("ADMIN") // Original admin endpoints for ADMINISTRATOR
+                .requestMatchers("/api/auth/teacher/courses").hasAnyRole("TEACHER", "ADMIN") // TEACHER or ADMIN or SUPER_ADMIN
+                .requestMatchers("/api/auth/student/**").hasAnyRole( "TEACHER", "ADMIN")
                 .anyRequest().authenticated()
                 .and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)  // Ensure JWT is used instead of sessions

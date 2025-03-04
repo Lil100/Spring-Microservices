@@ -1,65 +1,78 @@
 package com.schoolmanagement.studentservice.exams;
 
-import com.schoolmanagement.studentservice.AuthenticationServiceClient;
-import com.schoolmanagement.studentservice.dto.UserTokenResponseDTO;
+import com.schoolmanagement.studentservice.dto.GradingDTO;
 import com.schoolmanagement.studentservice.student.StudentEntity;
 import com.schoolmanagement.studentservice.student.StudentRepository;
-import feign.FeignException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
-
 public class ExamsService {
 
-    @Autowired
-    private ExamsRepository examsRepository;
+    private final ExamsRepository examsRepository;
+    private final StudentRepository studentRepository;
 
-    @Autowired
-    private StudentRepository studentRepository;
+    public ExamsService(ExamsRepository examsRepository,
+                        StudentRepository studentRepository) {
+        this.examsRepository = examsRepository;
+        this.studentRepository = studentRepository;
+    }
 
     public ExamsEntity saveExam(ExamsEntity examsEntity) {
-        // Check if studentId is provided
-        if (examsEntity.getStudentId() != null) {
-            Optional<StudentEntity> studentOptional = studentRepository.findById(examsEntity.getStudentId());
-            if (studentOptional.isPresent()) {
-                examsEntity.setStudent(studentOptional.get()); // Associate student with exam
-            } else {
-                throw new RuntimeException("Student not found");
-            }
+        // Validate and set student
+        if (examsEntity.getStudent() == null || examsEntity.getStudent().getId() == null) {
+            throw new RuntimeException("Student ID must be provided");
         }
 
-        return examsRepository.save(examsEntity); // Save the exam with the associated student
-    }
+        Long studentId = examsEntity.getStudent().getId();
+        StudentEntity student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("Student not found with ID: " + studentId));
+        examsEntity.setStudent(student);
 
-    public List<ExamsEntity> getExamsByStudent(Long studentId) {
-        Optional<StudentEntity> student = studentRepository.findById(studentId);
-        return student.map(examsRepository::findByStudent).orElseThrow(() -> new RuntimeException("Student not found"));
-    }
-    @Autowired
-    private AuthenticationServiceClient authenticationServiceClient;
+        // Predefined grading boundaries
+        List<GradingDTO> gradingCriteria = List.of(
+                new GradingDTO("F", 1, 39, "0"),
+                new GradingDTO("D", 40, 59, "1"),
+                new GradingDTO("C", 60, 69, "2"),
+                new GradingDTO("B", 70, 79, "3"),
+                new GradingDTO("A", 80, 100, "4")
+        );
 
-    public void performActionWithValidation(String token) {
-        try {
-            ResponseEntity<UserTokenResponseDTO> response = authenticationServiceClient.validateToken("Bearer " + token);
-
-            if (response.getStatusCode() == HttpStatus.OK) {
-                // The token is valid. Proceed with the action (e.g., CRUD operations)
-                UserTokenResponseDTO user = response.getBody();
-                // Perform operations using the validated user details
-            } else {
-                // Handle invalid token scenario (unauthorized access)
-                throw new RuntimeException("Invalid token");
-            }
-        } catch (FeignException ex) {
-            // Handle Feign exception (e.g., authentication service is down)
-            throw new RuntimeException("Error validating token", ex);
+        // Calculate grade based on the score and grading criteria
+        String grade = calculateGradeBasedOnScore(examsEntity.getScore(), gradingCriteria);
+        if (grade == null) {
+            throw new RuntimeException("No grading scale matches the score: " + examsEntity.getScore());
         }
+
+        // Retrieve the corresponding GradingDTO for the calculated grade
+        GradingDTO gradingDTO = gradingCriteria.stream()
+                .filter(grading -> grading.getGradeName().equals(grade))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Grading scale for grade " + grade + " not found"));
+
+        // Set the grading information in the examsEntity
+        examsEntity.setGrading(gradingDTO);
+
+        // Save the exam and return the saved entity
+        ExamsEntity savedExam = examsRepository.save(examsEntity);
+
+        return savedExam;
+    }
+
+    // Method to calculate grade based on the score
+    private String calculateGradeBasedOnScore(double score, List<GradingDTO> gradingCriteria) {
+        return gradingCriteria.stream()
+                .filter(grading -> score >= grading.getMinScore() && score <= grading.getMaxScore())
+                .map(GradingDTO::getGradeName)
+                .findFirst()
+                .orElse(null); // Return null if no grade matches the score
+    }
+
+    // Method to retrieve exams for a specific student
+    public List<ExamsEntity> getExamsByStudentId(Long studentId) {
+        StudentEntity student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("Student not found with ID: " + studentId));
+        return examsRepository.findByStudent(student);
     }
 }
-

@@ -1,6 +1,7 @@
 package com.schoolmanagement.studentservice.exams;
 
 import com.schoolmanagement.studentservice.student.StudentEntity;
+import org.springframework.data.domain.Limit;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -10,4 +11,6 @@ import java.util.List;
 
 public interface ExamsRepository extends JpaRepository<ExamsEntity, Long> {
     List<ExamsEntity> findByStudent(StudentEntity student);
+
+//    List<ExamsEntity> findByStudent_Id(Long studentId, Limit limit);
 }

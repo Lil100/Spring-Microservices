@@ -1,43 +1,27 @@
 package com.schoolmanagement.studentservice.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class GradingDTO {
 
-
     private Long id;
-    private String grade;
-    private double minScore;
-    private double maxScore;
+    private String gradeName;
+    private Integer minScore;
+    private Integer maxScore;
+    private String gradePoints; // If needed
 
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getGrade() {
-        return grade;
-    }
-
-    public void setGrade(String grade) {
-        this.grade = grade;
-    }
-
-    public double getMinScore() {
-        return minScore;
-    }
-
-    public void setMinScore(double minScore) {
+    // Constructor with gradeName, minScore, maxScore, and gradePoints
+    public GradingDTO(String gradeName, Integer minScore, Integer maxScore, String gradePoints) {
+        this.gradeName = gradeName;
         this.minScore = minScore;
-    }
-
-    public double getMaxScore() {
-        return maxScore;
-    }
-
-    public void setMaxScore(double maxScore) {
         this.maxScore = maxScore;
+        this.gradePoints = gradePoints; // Initialize gradePoints if needed
+    }
+
+    // Optional default constructor
+    public GradingDTO() {
     }
 }

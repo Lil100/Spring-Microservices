@@ -7,6 +7,7 @@ import com.schoolmanagement.Authentication.security.UserSigninDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -63,6 +64,7 @@ public class UserController {
 
 
     // Endpoint for Sign-In (for Teacher, Admin, and Student)
+    // Endpoint for Sign-In (for Teacher, Admin, and Student)
     @PostMapping("/signin")
     public ResponseEntity<Map<String, String>> signIn(@RequestBody UserSigninDTO usersigninDTO) {
         try {
@@ -81,10 +83,11 @@ public class UserController {
                 throw new UsernameNotFoundException("User not found with username: " + username);
             }
 
-            String role = userEntity.getRole().name();
+            // Get the role as a list
+            List<UserEntity.Role> roles = List.of(userEntity.getRole());
 
-            // If authentication is successful, generate JWT token
-            String token = jwtUtil.generateToken(username, List.of(role));
+            // Generate JWT token with roles
+            String token = jwtUtil.generateToken(username, roles);
 
             // Prepare response data
             Map<String, String> response = new HashMap<>();
@@ -100,6 +103,7 @@ public class UserController {
         }
     }
 
+
     @GetMapping("/validate")
     public ResponseEntity<?> validateToken(@RequestHeader("Authorization") String token) {
         // Remove "Bearer " prefix from the token
@@ -107,13 +111,15 @@ public class UserController {
 
         if (jwtUtil.isTokenValid(jwtToken)) {
             String username = jwtUtil.extractUsername(jwtToken);
-            // You can also return other user details like roles, etc.
-            return ResponseEntity.ok(new UserResponseDTO(username));  // Create a DTO or response class for user details
+            List<UserEntity.Role> roles = jwtUtil.extractRoles(jwtToken);  // Extract roles from the token
+            List<String> roleNames = roles.stream().map(Enum::name).collect(Collectors.toList());  // Convert Role enum to string list
+
+            // Return username and roles in the response
+            return ResponseEntity.ok(new UserResponseDTO(username, roleNames));
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token");
         }
     }
-
 
 }
 

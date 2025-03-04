@@ -19,11 +19,21 @@ spring:
 
 security:
   jwt:
-    secret: ${JWT_SECRET_KEY}  # Secret key for JWT encoding
+    secret: "5f6f62d8fb943c1eb48b5a4f7f6349e7643b25e8b6be88b9d7a09c77836dbd70"
     expirationMs: 86400000  # Token expiration in milliseconds (1 day)
+
 
 logging:
   level:
     root: INFO
     org.springframework.web: DEBUG
     org.hibernate.SQL: DEBUG
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    layout: StandaloneLayout
+    display-request-duration: true

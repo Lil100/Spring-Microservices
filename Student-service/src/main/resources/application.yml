@@ -19,8 +19,8 @@ spring:
 
   security:
     jwt:
-      secret: ${JWT_SECRET_KEY}  # Ensure the same secret key used in Authentication Service
-      expirationMs: 86400000  # Adjust token expiration if needed (1 day here)
+      secret: "5f6f62d8fb943c1eb48b5a4f7f6349e7643b25e8b6be88b9d7a09c77836dbd70"
+      expirationMs: 86400000  # Token expiration in milliseconds (1 day)
 
 logging:
   level:

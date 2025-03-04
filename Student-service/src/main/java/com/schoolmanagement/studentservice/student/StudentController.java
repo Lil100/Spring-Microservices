@@ -1,6 +1,5 @@
 package com.schoolmanagement.studentservice.student;
 
-import com.schoolmanagement.studentservice.ConfigurationServiceClient;
 import com.schoolmanagement.studentservice.dto.ClassesDTO;
 import com.schoolmanagement.studentservice.dto.GradingDTO;
 import com.schoolmanagement.studentservice.dto.StreamsDTO;
@@ -10,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/students")
@@ -17,43 +17,46 @@ public class StudentController {
 
     @Autowired
     private StudentService studentService;
-    @Autowired
-    private ConfigurationServiceClient configurationServiceClient;
 
-    @GetMapping("/all")
-    public String home() {
-        return "Student Service is running!";
-    }
-
+    // Endpoint to add a new student
     @PostMapping("/add")
-    public ResponseEntity<StudentEntity> addStudent(@RequestBody StudentEntity studentEntity) {
-        return ResponseEntity.ok(studentService.saveStudent(studentEntity));
+    public ResponseEntity<?> addStudent(@RequestBody StudentEntity studentEntity) {
+        try {
+            StudentEntity savedStudent = studentService.saveStudent(studentEntity);
+            return ResponseEntity.ok(savedStudent);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
+    // Get student by admission number
     @GetMapping("/{admissionNumber}")
-    public ResponseEntity<StudentEntity> getStudent(@PathVariable String admissionNumber) {
-        return studentService.getStudentByAdmissionNumber(admissionNumber)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<?> getStudentByAdmissionNumber(@PathVariable String admissionNumber) {
+        Optional<StudentEntity> student = studentService.getStudentByAdmissionNumber(admissionNumber);
+        return student.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
-    @GetMapping("/api/classes/all")
+
+    // Get all available classes (Forms)
+    @GetMapping("/classes")
     public ResponseEntity<List<ClassesDTO>> getAllClasses() {
-        return ResponseEntity.ok(configurationServiceClient.getAllClasses());
+        return ResponseEntity.ok(studentService.getAllClasses());
     }
 
-    @GetMapping("/api/streams/all")
+    // Get all available streams
+    @GetMapping("/streams")
     public ResponseEntity<List<StreamsDTO>> getAllStreams() {
-        return ResponseEntity.ok(configurationServiceClient.getAllStreams());
+        return ResponseEntity.ok(studentService.getAllStreams());
     }
 
-    @GetMapping("/api/subjects/all")
+    @GetMapping("/subjects")
     public ResponseEntity<List<SubjectsDTO>> getAllSubjects() {
-        return ResponseEntity.ok(configurationServiceClient.getAllSubjects());
+        return ResponseEntity.ok(studentService.getAllSubjects());
     }
 
-    @GetMapping("/api/grading/all")
+    @GetMapping("/grade")
     public ResponseEntity<List<GradingDTO>> getAllGrades() {
-        return ResponseEntity.ok(configurationServiceClient.getAllGrades());
+        return ResponseEntity.ok(studentService.getAllGrades());
     }
 
 }

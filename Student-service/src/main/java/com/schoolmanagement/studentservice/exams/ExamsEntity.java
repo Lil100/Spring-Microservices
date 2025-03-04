@@ -1,6 +1,8 @@
 package com.schoolmanagement.studentservice.exams;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.schoolmanagement.studentservice.dto.GradingDTO;
 import com.schoolmanagement.studentservice.student.StudentEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -20,11 +22,14 @@ public class ExamsEntity {
     private String term;
 
     @ManyToOne
-    @JsonBackReference
+//    @JsonBackReference
     @JoinColumn(name = "student_id")
     private StudentEntity student;
 
-    @Transient
-    private Long studentId;
+    @JsonIgnore
+    @Transient  // Use @Transient if you don't want to persist GradingDTO
+    private GradingDTO grading;
+
+
 
 }

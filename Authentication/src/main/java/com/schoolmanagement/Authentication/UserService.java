@@ -57,7 +57,7 @@ public class UserService {
         if (!passwordEncoder.matches(password, userEntity.getPassword())) {
             throw new IllegalArgumentException("Invalid password");
         }
-        List<String> roles = List.of(userEntity.getRole().name());
+        List<UserEntity.Role> roles = List.of(userEntity.getRole());
 
         // Generate JWT token
         return jwtUtil.generateToken(username, roles);

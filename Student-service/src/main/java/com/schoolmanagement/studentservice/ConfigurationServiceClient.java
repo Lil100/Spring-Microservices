@@ -6,6 +6,7 @@ import com.schoolmanagement.studentservice.dto.StreamsDTO;
 import com.schoolmanagement.studentservice.dto.SubjectsDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
@@ -23,4 +24,6 @@ public interface ConfigurationServiceClient {
 
     @GetMapping("/api/grading/all")
     List<GradingDTO> getAllGrades();
+
+
 }
